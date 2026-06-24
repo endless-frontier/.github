@@ -1,21 +1,12 @@
 name: Engineering task
-description: Track a scoped engineering change that is not a bug, run debug, dataset integration, or RFC.
+description: Track a scoped implementation, maintenance, documentation, or operational change.
 title: "task(scope): "
-labels: ["type/task", "state/needs-triage"]
 body:
-  - type: checkboxes
-    id: affected-repos
-    attributes:
-      label: Affected repositories
-      options:
-        - label: innovator-agent
-        - label: innovator-harbor
-        - label: innovator-slime
   - type: input
     id: area
     attributes:
-      label: Area
-      placeholder: workflow, docs, ack, training, evaluation, registry
+      label: Area or component
+      placeholder: CLI, API, UI, docs, workflow, build, deployment
     validations:
       required: true
   - type: textarea
@@ -41,7 +32,7 @@ body:
     id: plan
     attributes:
       label: Proposed implementation
-      description: High-level approach, files likely touched, or commands likely needed.
+      description: High-level approach, files likely touched, commands likely needed, or rollout steps.
   - type: textarea
     id: acceptance
     attributes:

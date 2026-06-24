@@ -1,26 +1,17 @@
 name: Bug report
-description: Report a reproducible defect in code, scripts, configs, or workflows.
+description: Report a reproducible defect in code, scripts, configs, workflows, or documentation.
 title: "bug(scope): "
-labels: ["type/bug", "state/needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use this when there is a specific defect that is not only a single failed run.
-        Do not paste secrets, kubeconfigs, access keys, API keys, or private registry credentials.
-  - type: checkboxes
-    id: affected-repos
-    attributes:
-      label: Affected repositories
-      options:
-        - label: innovator-agent
-        - label: innovator-harbor
-        - label: innovator-slime
+        Use this for a concrete, reproducible defect.
+        Do not paste secrets, tokens, credentials, private keys, or private configuration.
   - type: input
     id: area
     attributes:
-      label: Area
-      placeholder: ack, agent, training, evaluation, dataset, registry, workflow
+      label: Area or component
+      placeholder: CLI, API, UI, docs, workflow, build, deployment
     validations:
       required: true
   - type: textarea
@@ -60,11 +51,10 @@ body:
       label: Environment
       value: |
         - Branch / commit:
-        - Python version:
-        - Harbor commit, if relevant:
-        - Slime commit, if relevant:
-        - Kubernetes / ACK context, if relevant:
-        - Model backend, if relevant:
+        - Runtime / language version:
+        - Operating system or platform:
+        - Deployment or hosting context, if relevant:
+        - Related service versions, if relevant:
     validations:
       required: true
   - type: textarea
