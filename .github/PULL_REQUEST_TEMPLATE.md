@@ -24,6 +24,10 @@ Commands, smoke runs, or manual checks performed:
 
 What could break, and how should this be reverted or mitigated?
 
+## Compatibility
+
+Does this require migration, config changes, data changes, or coordinated deploys?
+
 ## Notes
 
 Reviewer context, follow-up work, or known limitations:

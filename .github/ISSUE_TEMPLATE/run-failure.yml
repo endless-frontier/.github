@@ -1,21 +1,12 @@
-name: Run failure
-description: Triage a failed training, evaluation, ACK, agent, or verifier run.
+name: Run / job failure
+description: Triage a concrete failed job, workflow, deployment, batch run, or scheduled task.
 title: "run(scope): "
-labels: ["type/run-failure", "state/needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use this for log-driven investigation of a concrete run.
-        Redact secrets, tokens, private kubeconfigs, and credentials before attaching logs.
-  - type: checkboxes
-    id: affected-repos
-    attributes:
-      label: Affected repositories
-      options:
-        - label: innovator-agent
-        - label: innovator-harbor
-        - label: innovator-slime
+        Use this for log-driven investigation of a concrete failed run.
+        Redact secrets, tokens, credentials, private keys, and private configuration before attaching logs.
   - type: dropdown
     id: failure-stage
     attributes:
@@ -23,32 +14,31 @@ body:
       options:
         - unknown
         - config validation
-        - environment start
-        - ACK / SandboxClaim / pod
-        - agent setup
-        - agent runtime
-        - verifier
-        - training / rollout
-        - result aggregation
+        - dependency installation
+        - build or packaging
+        - test or verification
+        - environment startup
+        - deployment
+        - runtime
+        - external service
+        - cleanup or aggregation
     validations:
       required: true
   - type: input
     id: job-name
     attributes:
       label: Job / run name
-      placeholder: tb2-20260528T000000Z
+      placeholder: nightly-build-20260624, deploy-prod-1234
   - type: input
     id: run-path
     attributes:
-      label: Run artifact path
-      placeholder: trials/runs/<job-name>
-    validations:
-      required: true
+      label: Run URL or artifact path
+      placeholder: https://... or logs/runs/<job-name>
   - type: textarea
     id: command
     attributes:
-      label: Command
-      description: Paste the exact command or launcher used.
+      label: Command, workflow, or trigger
+      description: Paste the exact command, workflow name, trigger, or deployment action used.
       render: shell
     validations:
       required: true
@@ -59,24 +49,22 @@ body:
       description: List the config file and important env vars. Redact credentials.
       value: |
         - Config:
-        - Dataset / TASK_ROOT:
-        - Registry:
-        - Agent:
-        - Model backend:
-        - Kubeconfig context:
+        - Environment:
+        - Runtime:
+        - External services:
+        - Recent related changes:
     validations:
       required: true
   - type: textarea
-    id: result-summary
+    id: summary
     attributes:
-      label: result.json summary
-      description: Paste a jq summary if available.
-      render: json
+      label: Failure summary
+      description: Summarize the failure count, impact, and repeated error pattern if available.
   - type: textarea
     id: representative-error
     attributes:
       label: Representative error
-      description: Paste one representative exception.txt / trial.log / pod event slice.
+      description: Paste one representative log, traceback, status output, or event slice.
       render: shell
     validations:
       required: true
@@ -93,6 +81,6 @@ body:
       value: |
         - [ ] Failure class is identified
         - [ ] Fix or operational mitigation is documented
-        - [ ] Smoke run or targeted validation passes
+        - [ ] Smoke run, retry, or targeted validation passes
     validations:
       required: true
