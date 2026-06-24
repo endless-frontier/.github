@@ -1,0 +1,62 @@
+name: Engineering task
+description: Track a scoped engineering change that is not a bug, run debug, dataset integration, or RFC.
+title: "task(scope): "
+labels: ["type/task", "state/needs-triage"]
+body:
+  - type: checkboxes
+    id: affected-repos
+    attributes:
+      label: Affected repositories
+      options:
+        - label: innovator-agent
+        - label: innovator-harbor
+        - label: innovator-slime
+  - type: input
+    id: area
+    attributes:
+      label: Area
+      placeholder: workflow, docs, ack, training, evaluation, registry
+    validations:
+      required: true
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What concrete outcome should this task produce?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      value: |
+        In scope:
+        - 
+
+        Out of scope:
+        - 
+    validations:
+      required: true
+  - type: textarea
+    id: plan
+    attributes:
+      label: Proposed implementation
+      description: High-level approach, files likely touched, or commands likely needed.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] 
+        - [ ] Validation command or manual check is documented
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks / rollback
+      description: What could break, and how can this be reverted or mitigated?
+  - type: textarea
+    id: links
+    attributes:
+      label: Links

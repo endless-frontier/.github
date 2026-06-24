@@ -1,0 +1,65 @@
+name: RFC
+description: Propose a cross-repository, protocol-level, or high-blast-radius design change.
+title: "rfc(scope): "
+labels: ["type/rfc", "state/needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use an RFC before large changes to dataset schemas, Harbor/Slime contracts, ACK lifecycle, training/evaluation interfaces, or repository policy.
+  - type: checkboxes
+    id: affected-repos
+    attributes:
+      label: Affected repositories
+      options:
+        - label: innovator-agent
+        - label: innovator-harbor
+        - label: innovator-slime
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem are we solving, and why now?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the proposed design or policy.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider?
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      value: |
+        - User-facing impact:
+        - Backward compatibility:
+        - Migration required:
+        - Operational risk:
+    validations:
+      required: true
+  - type: textarea
+    id: rollout
+    attributes:
+      label: Rollout / validation plan
+      value: |
+        - [ ] Prototype or proof of concept
+        - [ ] Targeted tests
+        - [ ] Smoke run
+        - [ ] Documentation
+        - [ ] Rollback plan
+    validations:
+      required: true
+  - type: textarea
+    id: open-questions
+    attributes:
+      label: Open questions

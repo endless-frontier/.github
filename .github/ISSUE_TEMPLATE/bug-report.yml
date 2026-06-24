@@ -1,0 +1,78 @@
+name: Bug report
+description: Report a reproducible defect in code, scripts, configs, or workflows.
+title: "bug(scope): "
+labels: ["type/bug", "state/needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when there is a specific defect that is not only a single failed run.
+        Do not paste secrets, kubeconfigs, access keys, API keys, or private registry credentials.
+  - type: checkboxes
+    id: affected-repos
+    attributes:
+      label: Affected repositories
+      options:
+        - label: innovator-agent
+        - label: innovator-harbor
+        - label: innovator-slime
+  - type: input
+    id: area
+    attributes:
+      label: Area
+      placeholder: ack, agent, training, evaluation, dataset, registry, workflow
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the smallest command/config/code path that reproduces the bug.
+      placeholder: |
+        1. Run `...`
+        2. With config `...`
+        3. Observe `...`
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the relevant error message or traceback.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      value: |
+        - Branch / commit:
+        - Python version:
+        - Harbor commit, if relevant:
+        - Slime commit, if relevant:
+        - Kubernetes / ACK context, if relevant:
+        - Model backend, if relevant:
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Suggested validation
+      description: How should a fix be verified?
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context

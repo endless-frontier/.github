@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Innovator workflow notes
+    url: https://github.com/infinite-frontier/innovator-agent
+    about: Use the issue forms for actionable work. Open-ended discussion should happen in the team chat first, then be converted into an issue with acceptance criteria.
