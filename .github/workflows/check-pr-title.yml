@@ -1,0 +1,23 @@
+name: Check PR title
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Conventional Commit title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          pattern='^(feat|fix|docs|refactor|test|chore|ci|perf|build|revert)\([a-z0-9._-]+\): .+'
+          if ! printf '%s\n' "$TITLE" | grep -Eq "$pattern"; then
+            echo "PR title must look like: type(scope): summary"
+            echo "Actual title: $TITLE"
+            exit 1
+          fi

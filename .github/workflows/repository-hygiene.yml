@@ -1,0 +1,80 @@
+name: Repository hygiene
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+
+      - name: Check changed files
+        id: changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          git diff --name-only --diff-filter=ACMRT "$base" "$head" | tee changed-files.txt
+
+      - name: Check YAML parses
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib
+          import subprocess
+          import sys
+
+          try:
+              import yaml
+          except ImportError:
+              subprocess.check_call([sys.executable, "-m", "pip", "install", "PyYAML"])
+              import yaml
+
+          paths = [
+              *pathlib.Path("configs").glob("**/*.yaml"),
+              *pathlib.Path(".github/workflows").glob("*.yml"),
+              *pathlib.Path(".github/workflows").glob("*.yaml"),
+          ]
+
+          for path in sorted(paths):
+              with path.open() as f:
+                  yaml.safe_load(f)
+
+          print(f"parsed {len(paths)} YAML files")
+          PY
+
+      - name: Check accidental artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          blocked=0
+          while IFS= read -r path; do
+            case "$path" in
+              trials/runs/*|trials/debug/*|*.log|*.pt|*.safetensors|*.tar|*.zip)
+                echo "Refusing accidental artifact: $path"
+                blocked=1
+                ;;
+            esac
+          done < changed-files.txt
+          exit "$blocked"
+
+      - name: Compile changed Python files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t py_files < <(grep -E '\.py$' changed-files.txt || true)
+          if [ "${#py_files[@]}" -eq 0 ]; then
+            echo "No changed Python files."
+            exit 0
+          fi
+          python -m py_compile "${py_files[@]}"

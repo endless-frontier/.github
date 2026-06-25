@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "comment_markdown": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The full Markdown PR review comment to post."
+    },
+    "line_warnings": {
+      "type": "array",
+      "description": "Warnings that should be emitted as GitHub Actions annotations on changed files.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Repository-relative path for a changed file."
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "One-based line number in the PR head version of the file."
+          },
+          "title": {
+            "type": "string",
+            "description": "Short warning title."
+          },
+          "message": {
+            "type": "string",
+            "description": "Actionable warning message."
+          }
+        },
+        "required": ["path", "line", "title", "message"]
+      }
+    }
+  },
+  "required": ["comment_markdown", "line_warnings"]
+}
