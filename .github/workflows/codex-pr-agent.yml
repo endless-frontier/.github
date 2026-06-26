@@ -250,23 +250,39 @@ jobs:
             echo "enabled=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if [ -z "$CODEX_RESPONSES_API_ENDPOINT" ]; then
-            echo "Configure CODEX_RESPONSES_API_ENDPOINT for Codex PR review." >&2
-            exit 1
-          fi
           if [ -z "$CODEX_MODEL" ]; then
             echo "Configure CODEX_MODEL for Codex PR review." >&2
             exit 1
           fi
           echo "enabled=true" >> "$GITHUB_OUTPUT"
+          if [ -n "$CODEX_RESPONSES_API_ENDPOINT" ]; then
+            echo "endpoint_present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "endpoint_present=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Run Codex review
-        if: ${{ steps.codex_config.outputs.enabled == 'true' }}
-        id: run_codex
+      - name: Run Codex review with custom endpoint
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' }}
+        id: run_codex_custom_endpoint
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
           responses-api-endpoint: ${{ secrets.CODEX_RESPONSES_API_ENDPOINT || vars.CODEX_RESPONSES_API_ENDPOINT }}
+          prompt-file: .codex-org/codex/pr-review.md
+          output-file: codex-pr-review.json
+          output-schema-file: .codex-org/codex/pr-review.schema.json
+          model: ${{ vars.CODEX_MODEL }}
+          effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
+          codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
+          safety-strategy: drop-sudo
+          sandbox: workspace-write
+
+      - name: Run Codex review
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' }}
+        id: run_codex_default_endpoint
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
           prompt-file: .codex-org/codex/pr-review.md
           output-file: codex-pr-review.json
           output-schema-file: .codex-org/codex/pr-review.schema.json
