@@ -8,6 +8,11 @@ on:
         required: false
         type: string
         default: "[skip-agent]"
+      use-custom-responses-api-endpoint:
+        description: Opt in to CODEX_RESPONSES_API_ENDPOINT for Codex review.
+        required: false
+        type: boolean
+        default: false
     secrets:
       CODEX_API_KEY:
         required: false
@@ -33,7 +38,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       !contains(github.event.pull_request.title, inputs.skip-title-token)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
 
     steps:
       - name: Checkout PR merge commit
@@ -242,6 +247,7 @@ jobs:
         env:
           CODEX_API_KEY_SET: ${{ secrets.CODEX_API_KEY != '' || secrets.OPENAI_API_KEY != '' }}
           CODEX_RESPONSES_API_ENDPOINT: ${{ secrets.CODEX_RESPONSES_API_ENDPOINT || vars.CODEX_RESPONSES_API_ENDPOINT }}
+          CODEX_USE_CUSTOM_RESPONSES_API_ENDPOINT: ${{ inputs['use-custom-responses-api-endpoint'] || vars.CODEX_USE_CUSTOM_RESPONSES_API_ENDPOINT == 'true' }}
           CODEX_MODEL: ${{ vars.CODEX_MODEL }}
         run: |
           set -euo pipefail
@@ -255,16 +261,20 @@ jobs:
             exit 1
           fi
           echo "enabled=true" >> "$GITHUB_OUTPUT"
-          if [ -n "$CODEX_RESPONSES_API_ENDPOINT" ]; then
+          if [ "$CODEX_USE_CUSTOM_RESPONSES_API_ENDPOINT" = "true" ] && [ -n "$CODEX_RESPONSES_API_ENDPOINT" ]; then
             echo "endpoint_present=true" >> "$GITHUB_OUTPUT"
           else
             echo "endpoint_present=false" >> "$GITHUB_OUTPUT"
+            if [ -n "$CODEX_RESPONSES_API_ENDPOINT" ]; then
+              echo "::notice::Ignoring CODEX_RESPONSES_API_ENDPOINT because custom endpoint usage is not enabled."
+            fi
           fi
 
       - name: Run Codex review with custom endpoint
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' }}
         id: run_codex_custom_endpoint
         uses: openai/codex-action@v1
+        timeout-minutes: 20
         with:
           openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
           responses-api-endpoint: ${{ secrets.CODEX_RESPONSES_API_ENDPOINT || vars.CODEX_RESPONSES_API_ENDPOINT }}
@@ -281,6 +291,7 @@ jobs:
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' }}
         id: run_codex_default_endpoint
         uses: openai/codex-action@v1
+        timeout-minutes: 20
         with:
           openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
           prompt-file: .codex-org/codex/pr-review.md
