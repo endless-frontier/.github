@@ -8,11 +8,6 @@ on:
         required: false
         type: string
         default: "[skip-agent]"
-      use-custom-responses-api-endpoint:
-        description: Opt in to CODEX_RESPONSES_API_ENDPOINT for Codex review.
-        required: false
-        type: boolean
-        default: false
     secrets:
       CODEX_API_KEY:
         required: false
@@ -247,7 +242,6 @@ jobs:
         env:
           CODEX_API_KEY_SET: ${{ secrets.CODEX_API_KEY != '' || secrets.OPENAI_API_KEY != '' }}
           CODEX_RESPONSES_API_ENDPOINT: ${{ secrets.CODEX_RESPONSES_API_ENDPOINT || vars.CODEX_RESPONSES_API_ENDPOINT }}
-          CODEX_USE_CUSTOM_RESPONSES_API_ENDPOINT: ${{ inputs['use-custom-responses-api-endpoint'] || vars.CODEX_USE_CUSTOM_RESPONSES_API_ENDPOINT == 'true' }}
           CODEX_MODEL: ${{ vars.CODEX_MODEL }}
         run: |
           set -euo pipefail
@@ -261,13 +255,10 @@ jobs:
             exit 1
           fi
           echo "enabled=true" >> "$GITHUB_OUTPUT"
-          if [ "$CODEX_USE_CUSTOM_RESPONSES_API_ENDPOINT" = "true" ] && [ -n "$CODEX_RESPONSES_API_ENDPOINT" ]; then
+          if [ -n "$CODEX_RESPONSES_API_ENDPOINT" ]; then
             echo "endpoint_present=true" >> "$GITHUB_OUTPUT"
           else
             echo "endpoint_present=false" >> "$GITHUB_OUTPUT"
-            if [ -n "$CODEX_RESPONSES_API_ENDPOINT" ]; then
-              echo "::notice::Ignoring CODEX_RESPONSES_API_ENDPOINT because custom endpoint usage is not enabled."
-            fi
           fi
 
       - name: Run Codex review with custom endpoint
