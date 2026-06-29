@@ -319,6 +319,7 @@ jobs:
       - name: Run Codex review with custom endpoint (attempt 3)
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' && steps.run_codex_custom_endpoint_1.outcome == 'failure' && steps.run_codex_custom_endpoint_2.outcome == 'failure' && steps.custom_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_custom_endpoint_3
+        continue-on-error: true
         timeout-minutes: 10
         shell: bash
         env:
@@ -397,6 +398,7 @@ jobs:
       - name: Run Codex review (attempt 3)
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' && steps.run_codex_default_endpoint_1.outcome == 'failure' && steps.run_codex_default_endpoint_2.outcome == 'failure' && steps.default_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_default_endpoint_3
+        continue-on-error: true
         timeout-minutes: 10
         shell: bash
         env:
@@ -417,6 +419,53 @@ jobs:
             --sandbox workspace-write
           )
           CODEX_HOME="$HOME/.codex" "${args[@]}" < .codex-org/codex/pr-review.md
+
+      - name: Create fallback Codex feedback
+        if: |
+          steps.codex_config.outputs.enabled == 'true' &&
+          (
+            (
+              steps.codex_config.outputs.endpoint_present == 'true' &&
+              steps.run_codex_custom_endpoint_1.outcome == 'failure' &&
+              steps.run_codex_custom_endpoint_2.outcome == 'failure' &&
+              steps.run_codex_custom_endpoint_3.outcome == 'failure'
+            ) ||
+            (
+              steps.codex_config.outputs.endpoint_present != 'true' &&
+              steps.run_codex_default_endpoint_1.outcome == 'failure' &&
+              steps.run_codex_default_endpoint_2.outcome == 'failure' &&
+              steps.run_codex_default_endpoint_3.outcome == 'failure'
+            )
+          )
+        shell: bash
+        env:
+          CODEX_MODEL: ${{ vars.CODEX_MODEL }}
+          CODEX_ENDPOINT_PRESENT: ${{ steps.codex_config.outputs.endpoint_present }}
+        run: |
+          set -euo pipefail
+          echo "::warning::Codex PR review did not complete after three attempts; posting diagnostic fallback feedback."
+          endpoint_label="default endpoint"
+          if [ "$CODEX_ENDPOINT_PRESENT" = "true" ]; then
+            endpoint_label="configured custom endpoint"
+          fi
+          jq -n \
+            --arg model "$CODEX_MODEL" \
+            --arg endpoint "$endpoint_label" \
+            '{
+              comment_markdown: (
+                "## Codex PR Review\n\n" +
+                "### Summary\n" +
+                "- Codex PR review could not complete after three attempts.\n\n" +
+                "### Review Notes\n" +
+                "- No automated review findings are available for this run because the Codex model request failed before producing review output.\n" +
+                "- The workflow reached the \($endpoint) using model `\($model)`, but the model request did not complete.\n\n" +
+                "### Usage / Compatibility Impact\n" +
+                "- This is an automation availability issue, not a signal about the PR contents.\n\n" +
+                "### Suggested Validation\n" +
+                "- Re-run the Codex PR Agent after the endpoint/model capacity issue clears.\n"
+              ),
+              line_warnings: []
+            }' > codex-pr-review.json
 
       - name: Post or update Codex feedback
         if: ${{ steps.codex_config.outputs.enabled == 'true' }}
