@@ -33,7 +33,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       !contains(github.event.pull_request.title, inputs.skip-title-token)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Checkout PR merge commit
@@ -261,11 +261,12 @@ jobs:
             echo "endpoint_present=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run Codex review with custom endpoint
+      - name: Run Codex review with custom endpoint (attempt 1)
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' }}
-        id: run_codex_custom_endpoint
+        id: run_codex_custom_endpoint_1
         uses: openai/codex-action@v1
-        timeout-minutes: 20
+        continue-on-error: true
+        timeout-minutes: 10
         with:
           openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
           responses-api-endpoint: ${{ secrets.CODEX_RESPONSES_API_ENDPOINT || vars.CODEX_RESPONSES_API_ENDPOINT }}
@@ -278,11 +279,80 @@ jobs:
           safety-strategy: drop-sudo
           sandbox: workspace-write
 
-      - name: Run Codex review
-        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' }}
-        id: run_codex_default_endpoint
+      - name: Run Codex review with custom endpoint (attempt 2)
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' && steps.run_codex_custom_endpoint_1.outcome == 'failure' }}
+        id: run_codex_custom_endpoint_2
         uses: openai/codex-action@v1
-        timeout-minutes: 20
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
+          responses-api-endpoint: ${{ secrets.CODEX_RESPONSES_API_ENDPOINT || vars.CODEX_RESPONSES_API_ENDPOINT }}
+          prompt-file: .codex-org/codex/pr-review.md
+          output-file: codex-pr-review.json
+          output-schema-file: .codex-org/codex/pr-review.schema.json
+          model: ${{ vars.CODEX_MODEL }}
+          effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
+          codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
+          safety-strategy: drop-sudo
+          sandbox: workspace-write
+
+      - name: Run Codex review with custom endpoint (attempt 3)
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' && steps.run_codex_custom_endpoint_1.outcome == 'failure' && steps.run_codex_custom_endpoint_2.outcome == 'failure' }}
+        id: run_codex_custom_endpoint_3
+        uses: openai/codex-action@v1
+        timeout-minutes: 10
+        with:
+          openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
+          responses-api-endpoint: ${{ secrets.CODEX_RESPONSES_API_ENDPOINT || vars.CODEX_RESPONSES_API_ENDPOINT }}
+          prompt-file: .codex-org/codex/pr-review.md
+          output-file: codex-pr-review.json
+          output-schema-file: .codex-org/codex/pr-review.schema.json
+          model: ${{ vars.CODEX_MODEL }}
+          effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
+          codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
+          safety-strategy: drop-sudo
+          sandbox: workspace-write
+
+      - name: Run Codex review (attempt 1)
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' }}
+        id: run_codex_default_endpoint_1
+        uses: openai/codex-action@v1
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
+          prompt-file: .codex-org/codex/pr-review.md
+          output-file: codex-pr-review.json
+          output-schema-file: .codex-org/codex/pr-review.schema.json
+          model: ${{ vars.CODEX_MODEL }}
+          effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
+          codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
+          safety-strategy: drop-sudo
+          sandbox: workspace-write
+
+      - name: Run Codex review (attempt 2)
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' && steps.run_codex_default_endpoint_1.outcome == 'failure' }}
+        id: run_codex_default_endpoint_2
+        uses: openai/codex-action@v1
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
+          prompt-file: .codex-org/codex/pr-review.md
+          output-file: codex-pr-review.json
+          output-schema-file: .codex-org/codex/pr-review.schema.json
+          model: ${{ vars.CODEX_MODEL }}
+          effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
+          codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
+          safety-strategy: drop-sudo
+          sandbox: workspace-write
+
+      - name: Run Codex review (attempt 3)
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' && steps.run_codex_default_endpoint_1.outcome == 'failure' && steps.run_codex_default_endpoint_2.outcome == 'failure' }}
+        id: run_codex_default_endpoint_3
+        uses: openai/codex-action@v1
+        timeout-minutes: 10
         with:
           openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
           prompt-file: .codex-org/codex/pr-review.md
