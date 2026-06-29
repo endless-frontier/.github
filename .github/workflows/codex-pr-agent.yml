@@ -294,37 +294,51 @@ jobs:
       - name: Run Codex review with custom endpoint (attempt 2)
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' && steps.run_codex_custom_endpoint_1.outcome == 'failure' && steps.custom_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_custom_endpoint_2
-        uses: openai/codex-action@v1
         continue-on-error: true
         timeout-minutes: 10
-        with:
-          openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
-          responses-api-endpoint: ${{ secrets.CODEX_RESPONSES_API_ENDPOINT || vars.CODEX_RESPONSES_API_ENDPOINT }}
-          prompt-file: .codex-org/codex/pr-review.md
-          output-file: codex-pr-review.json
-          output-schema-file: .codex-org/codex/pr-review.schema.json
-          model: ${{ vars.CODEX_MODEL }}
-          effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
-          codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
-          safety-strategy: unsafe
-          sandbox: workspace-write
+        shell: bash
+        env:
+          CODEX_MODEL: ${{ vars.CODEX_MODEL }}
+          CODEX_EFFORT: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
+        run: |
+          set -euo pipefail
+          args=(
+            codex exec
+            --skip-git-repo-check
+            --cd "$GITHUB_WORKSPACE"
+            --output-last-message codex-pr-review.json
+            --output-schema .codex-org/codex/pr-review.schema.json
+            --model "$CODEX_MODEL"
+            --config "model_reasoning_effort=\"${CODEX_EFFORT}\""
+            --config 'service_tier="default"'
+            --config 'disable_response_storage=true'
+            --sandbox workspace-write
+          )
+          CODEX_HOME="$HOME/.codex" "${args[@]}" < .codex-org/codex/pr-review.md
 
       - name: Run Codex review with custom endpoint (attempt 3)
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' && steps.run_codex_custom_endpoint_1.outcome == 'failure' && steps.run_codex_custom_endpoint_2.outcome == 'failure' && steps.custom_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_custom_endpoint_3
-        uses: openai/codex-action@v1
         timeout-minutes: 10
-        with:
-          openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
-          responses-api-endpoint: ${{ secrets.CODEX_RESPONSES_API_ENDPOINT || vars.CODEX_RESPONSES_API_ENDPOINT }}
-          prompt-file: .codex-org/codex/pr-review.md
-          output-file: codex-pr-review.json
-          output-schema-file: .codex-org/codex/pr-review.schema.json
-          model: ${{ vars.CODEX_MODEL }}
-          effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
-          codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
-          safety-strategy: unsafe
-          sandbox: workspace-write
+        shell: bash
+        env:
+          CODEX_MODEL: ${{ vars.CODEX_MODEL }}
+          CODEX_EFFORT: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
+        run: |
+          set -euo pipefail
+          args=(
+            codex exec
+            --skip-git-repo-check
+            --cd "$GITHUB_WORKSPACE"
+            --output-last-message codex-pr-review.json
+            --output-schema .codex-org/codex/pr-review.schema.json
+            --model "$CODEX_MODEL"
+            --config "model_reasoning_effort=\"${CODEX_EFFORT}\""
+            --config 'service_tier="default"'
+            --config 'disable_response_storage=true'
+            --sandbox workspace-write
+          )
+          CODEX_HOME="$HOME/.codex" "${args[@]}" < .codex-org/codex/pr-review.md
 
       - name: Run Codex review (attempt 1)
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' }}
@@ -358,35 +372,51 @@ jobs:
       - name: Run Codex review (attempt 2)
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' && steps.run_codex_default_endpoint_1.outcome == 'failure' && steps.default_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_default_endpoint_2
-        uses: openai/codex-action@v1
         continue-on-error: true
         timeout-minutes: 10
-        with:
-          openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
-          prompt-file: .codex-org/codex/pr-review.md
-          output-file: codex-pr-review.json
-          output-schema-file: .codex-org/codex/pr-review.schema.json
-          model: ${{ vars.CODEX_MODEL }}
-          effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
-          codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
-          safety-strategy: unsafe
-          sandbox: workspace-write
+        shell: bash
+        env:
+          CODEX_MODEL: ${{ vars.CODEX_MODEL }}
+          CODEX_EFFORT: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
+        run: |
+          set -euo pipefail
+          args=(
+            codex exec
+            --skip-git-repo-check
+            --cd "$GITHUB_WORKSPACE"
+            --output-last-message codex-pr-review.json
+            --output-schema .codex-org/codex/pr-review.schema.json
+            --model "$CODEX_MODEL"
+            --config "model_reasoning_effort=\"${CODEX_EFFORT}\""
+            --config 'service_tier="default"'
+            --config 'disable_response_storage=true'
+            --sandbox workspace-write
+          )
+          CODEX_HOME="$HOME/.codex" "${args[@]}" < .codex-org/codex/pr-review.md
 
       - name: Run Codex review (attempt 3)
         if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' && steps.run_codex_default_endpoint_1.outcome == 'failure' && steps.run_codex_default_endpoint_2.outcome == 'failure' && steps.default_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_default_endpoint_3
-        uses: openai/codex-action@v1
         timeout-minutes: 10
-        with:
-          openai-api-key: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
-          prompt-file: .codex-org/codex/pr-review.md
-          output-file: codex-pr-review.json
-          output-schema-file: .codex-org/codex/pr-review.schema.json
-          model: ${{ vars.CODEX_MODEL }}
-          effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
-          codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
-          safety-strategy: unsafe
-          sandbox: workspace-write
+        shell: bash
+        env:
+          CODEX_MODEL: ${{ vars.CODEX_MODEL }}
+          CODEX_EFFORT: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
+        run: |
+          set -euo pipefail
+          args=(
+            codex exec
+            --skip-git-repo-check
+            --cd "$GITHUB_WORKSPACE"
+            --output-last-message codex-pr-review.json
+            --output-schema .codex-org/codex/pr-review.schema.json
+            --model "$CODEX_MODEL"
+            --config "model_reasoning_effort=\"${CODEX_EFFORT}\""
+            --config 'service_tier="default"'
+            --config 'disable_response_storage=true'
+            --sandbox workspace-write
+          )
+          CODEX_HOME="$HOME/.codex" "${args[@]}" < .codex-org/codex/pr-review.md
 
       - name: Post or update Codex feedback
         if: ${{ steps.codex_config.outputs.enabled == 'true' }}
