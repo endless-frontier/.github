@@ -279,8 +279,20 @@ jobs:
           safety-strategy: drop-sudo
           sandbox: workspace-write
 
+      - name: Verify sudo is disabled before retry
+        if: ${{ steps.run_codex_custom_endpoint_1.outcome == 'failure' }}
+        id: custom_retry_safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          if sudo -n true 2>/dev/null; then
+            echo "Refusing to retry Codex after a failed attempt because sudo is still available." >&2
+            exit 1
+          fi
+          echo "sudo_removed=true" >> "$GITHUB_OUTPUT"
+
       - name: Run Codex review with custom endpoint (attempt 2)
-        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' && steps.run_codex_custom_endpoint_1.outcome == 'failure' }}
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' && steps.run_codex_custom_endpoint_1.outcome == 'failure' && steps.custom_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_custom_endpoint_2
         uses: openai/codex-action@v1
         continue-on-error: true
@@ -294,11 +306,11 @@ jobs:
           model: ${{ vars.CODEX_MODEL }}
           effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
           codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
-          safety-strategy: drop-sudo
+          safety-strategy: unsafe
           sandbox: workspace-write
 
       - name: Run Codex review with custom endpoint (attempt 3)
-        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' && steps.run_codex_custom_endpoint_1.outcome == 'failure' && steps.run_codex_custom_endpoint_2.outcome == 'failure' }}
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present == 'true' && steps.run_codex_custom_endpoint_1.outcome == 'failure' && steps.run_codex_custom_endpoint_2.outcome == 'failure' && steps.custom_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_custom_endpoint_3
         uses: openai/codex-action@v1
         timeout-minutes: 10
@@ -311,7 +323,7 @@ jobs:
           model: ${{ vars.CODEX_MODEL }}
           effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
           codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
-          safety-strategy: drop-sudo
+          safety-strategy: unsafe
           sandbox: workspace-write
 
       - name: Run Codex review (attempt 1)
@@ -331,8 +343,20 @@ jobs:
           safety-strategy: drop-sudo
           sandbox: workspace-write
 
+      - name: Verify sudo is disabled before default endpoint retry
+        if: ${{ steps.run_codex_default_endpoint_1.outcome == 'failure' }}
+        id: default_retry_safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          if sudo -n true 2>/dev/null; then
+            echo "Refusing to retry Codex after a failed attempt because sudo is still available." >&2
+            exit 1
+          fi
+          echo "sudo_removed=true" >> "$GITHUB_OUTPUT"
+
       - name: Run Codex review (attempt 2)
-        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' && steps.run_codex_default_endpoint_1.outcome == 'failure' }}
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' && steps.run_codex_default_endpoint_1.outcome == 'failure' && steps.default_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_default_endpoint_2
         uses: openai/codex-action@v1
         continue-on-error: true
@@ -345,11 +369,11 @@ jobs:
           model: ${{ vars.CODEX_MODEL }}
           effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
           codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
-          safety-strategy: drop-sudo
+          safety-strategy: unsafe
           sandbox: workspace-write
 
       - name: Run Codex review (attempt 3)
-        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' && steps.run_codex_default_endpoint_1.outcome == 'failure' && steps.run_codex_default_endpoint_2.outcome == 'failure' }}
+        if: ${{ steps.codex_config.outputs.enabled == 'true' && steps.codex_config.outputs.endpoint_present != 'true' && steps.run_codex_default_endpoint_1.outcome == 'failure' && steps.run_codex_default_endpoint_2.outcome == 'failure' && steps.default_retry_safety.outputs.sudo_removed == 'true' }}
         id: run_codex_default_endpoint_3
         uses: openai/codex-action@v1
         timeout-minutes: 10
@@ -361,7 +385,7 @@ jobs:
           model: ${{ vars.CODEX_MODEL }}
           effort: ${{ vars.CODEX_REASONING_EFFORT || 'medium' }}
           codex-args: '["--config","service_tier=\"default\"","--config","disable_response_storage=true"]'
-          safety-strategy: drop-sudo
+          safety-strategy: unsafe
           sandbox: workspace-write
 
       - name: Post or update Codex feedback
